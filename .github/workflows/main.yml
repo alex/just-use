@@ -1,0 +1,40 @@
+on:
+  pull_request: {}
+  push:
+    branches: master
+
+name: Continuous integration
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - run: sudo apt-get install -y "linux-headers-$(uname -r)"
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rustfmt, rust-src
+
+      - run: |
+            sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main"
+            sudo apt-get install -y clang-9 libclang-9-dev
+            echo "::set-env name=CC::clang-9"
+            echo "::set-env name=CXX::clang++-9"
+            echo "::set-env name=CLANG::clang-9"
+
+      - run: make
+      - run: sudo insmod justuse.ko
+      - run: dmesg
+        if: failure()
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+

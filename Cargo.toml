@@ -1,0 +1,11 @@
+[package]
+name = "just-use"
+version = "0.1.0"
+authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+linux-kernel-module = { git = "https://github.com/fishinabarrel/linux-kernel-module-rust" }
