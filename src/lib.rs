@@ -18,14 +18,23 @@ impl linux_kernel_module::file_operations::FileOperations for RandomFile {
 impl linux_kernel_module::file_operations::Read for RandomFile {
     fn read(
         &self,
+        file: &linux_kernel_module::file_operations::File,
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
         const TMP_BUF_LEN: usize = 256;
-        // TODO: Respect O_NONBLOCK
         while !buf.is_empty() {
             let mut tmp_buf = [0; TMP_BUF_LEN];
-            linux_kernel_module::random::getrandom(&mut tmp_buf[..TMP_BUF_LEN.min(buf.len())])?;
+            if file
+                .flags()
+                .contains(linux_kernel_module::file_operations::FileFlags::NONBLOCK)
+            {
+                linux_kernel_module::random::getrandom_nonblock(
+                    &mut tmp_buf[..TMP_BUF_LEN.min(buf.len())],
+                )?;
+            } else {
+                linux_kernel_module::random::getrandom(&mut tmp_buf[..TMP_BUF_LEN.min(buf.len())])?;
+            }
             buf.write(&mut tmp_buf[..TMP_BUF_LEN.min(buf.len())])?;
         }
         Ok(())
