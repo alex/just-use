@@ -8,6 +8,7 @@ impl linux_kernel_module::file_operations::FileOperations for RandomFile {
     const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
         linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>()
             .read()
+            .write()
             .build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
@@ -41,8 +42,23 @@ impl linux_kernel_module::file_operations::Read for RandomFile {
     }
 }
 
+impl linux_kernel_module::file_operations::Write for RandomFile {
+    fn write(
+        &self,
+        buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
+        _offset: u64,
+    ) -> linux_kernel_module::KernelResult<()> {
+        const TMP_BUF_LEN: usize = 256;
+        while !buf.is_empty() {
+            let mut tmp_buf = [0; TMP_BUF_LEN];
+            buf.read(&mut tmp_buf[..TMP_BUF_LEN.min(buf.len())])?;
+            linux_kernel_module::random::add_randomness(&tmp_buf[..TMP_BUF_LEN.min(buf.len())]);
+        }
+        Ok(())
+    }
+}
+
 // TODO:
-// - impl Write (add entropy to system pool)
 // - impl Poll (check if Read will be non-blocking)
 
 struct JustUseModule {

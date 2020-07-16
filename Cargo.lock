@@ -153,7 +153,7 @@ dependencies = [
 [[package]]
 name = "linux-kernel-module"
 version = "0.1.0"
-source = "git+https://github.com/fishinabarrel/linux-kernel-module-rust#7f168a51576f0d1955a2389ea27d31652f9a9afd"
+source = "git+https://github.com/fishinabarrel/linux-kernel-module-rust#59110dc79f595b06ae457b8f8de8ebed08846fd3"
 dependencies = [
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
