@@ -37,8 +37,17 @@ jobs:
             echo "::set-env name=CLANG::clang-10"
 
       - run: make
-      - run: sudo insmod justuse.ko
-      - run: cat /proc/devices | grep justuse
+      - name: Test the device
+        run: |
+            set -x
+            sudo insmod justuse.ko
+            DEVICE_NUM=$(cat /proc/devices | grep justuse | awk '{print $1}')
+            echo "justuse device number is $DEVICE_NUM"
+            sudo mknod --mode=0666 ./rand c $DEVICE_NUM 0
+            head -c 16 ./rand | xxd
+            head -c 64 ./rand | xxd
+            head -c 1024 ./rand | xxd
+            echo "some stuff" > ./rand
       - run: dmesg
         if: failure()
 
