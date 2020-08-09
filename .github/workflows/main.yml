@@ -30,6 +30,7 @@ jobs:
 
       - run: make
       - run: sudo insmod justuse.ko
+      - run: cat /proc/devices | grep justuse
       - run: dmesg
         if: failure()
 
@@ -37,4 +38,3 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
-
