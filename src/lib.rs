@@ -78,7 +78,7 @@ impl linux_kernel_module::KernelModule for JustUseModule {
 
 linux_kernel_module::kernel_module!(
     JustUseModule,
-    author: "Alex Gaynor <alex.gaynor@gmail.com>",
-    description: "Just use /dev/urandom: Now with early-boot safety",
-    license: "GPL"
+    author: b"Alex Gaynor <alex.gaynor@gmail.com>",
+    description: b"Just use /dev/urandom: Now with early-boot safety",
+    license: b"GPL"
 );
