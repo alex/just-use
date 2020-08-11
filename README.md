@@ -19,4 +19,4 @@ And that's it! Include in your system boot configuration to ensure that your ran
 Currently only builds on x86-64, but if you're interested in other architectures, please file an issue and we'll make it happen! Also it's written in Rust (currently requires a nightly Rust), so memory safety!
 
 [^1]: Nowadays you should probably Just Use `getrandom(2)`, but that's besides the point.
-[^2]: We're actually missing two compatibility feature: `poll()` support, when used as `/dev/random`, and support for `ioctl()`s on the device.
+[^2]: We're actually missing two compatibility feature: `poll()` support (it currently always reports as both readable and writable, when used as `/dev/random`, and support for `ioctl()`s on the device.
