@@ -4,7 +4,6 @@ justuse-objs := just_use.rust.o
 CARGO ?= cargo
 
 export c_flags
-export abs_srctree ?= ${CURDIR}
 
 
 $(src)/target/x86_64-linux-kernel/release/libjust_use.a: $(src)/Cargo.toml $(wildcard $(src)/src/*.rs)
