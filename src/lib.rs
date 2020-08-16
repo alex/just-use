@@ -51,7 +51,7 @@ impl linux_kernel_module::file_operations::Write for RandomFile {
         while !buf.is_empty() {
             let len = chunkbuf.len().min(buf.len());
             let chunk = &mut chunkbuf[0..len];
-            buf.read(chunk);
+            buf.read(chunk)?;
             linux_kernel_module::random::add_randomness(chunk);
         }
         Ok(())
