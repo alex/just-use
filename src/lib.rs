@@ -23,20 +23,19 @@ impl linux_kernel_module::file_operations::Read for RandomFile {
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
-        const TMP_BUF_LEN: usize = 256;
+        let mut chunkbuf = [0; 256];
         while !buf.is_empty() {
-            let mut tmp_buf = [0; TMP_BUF_LEN];
+            let len = chunkbuf.len().min(buf.len());
+            let chunk = &mut chunkbuf[0..len];
             if file
                 .flags()
                 .contains(linux_kernel_module::file_operations::FileFlags::NONBLOCK)
             {
-                linux_kernel_module::random::getrandom_nonblock(
-                    &mut tmp_buf[..TMP_BUF_LEN.min(buf.len())],
-                )?;
+                linux_kernel_module::random::getrandom_nonblock(chunk)?;
             } else {
-                linux_kernel_module::random::getrandom(&mut tmp_buf[..TMP_BUF_LEN.min(buf.len())])?;
+                linux_kernel_module::random::getrandom(chunk)?;
             }
-            buf.write(&mut tmp_buf[..TMP_BUF_LEN.min(buf.len())])?;
+            buf.write(chunk)?;
         }
         Ok(())
     }
@@ -48,11 +47,12 @@ impl linux_kernel_module::file_operations::Write for RandomFile {
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
-        const TMP_BUF_LEN: usize = 256;
+        let mut chunkbuf = [0; 256];
         while !buf.is_empty() {
-            let mut tmp_buf = [0; TMP_BUF_LEN];
-            buf.read(&mut tmp_buf[..TMP_BUF_LEN.min(buf.len())])?;
-            linux_kernel_module::random::add_randomness(&tmp_buf[..TMP_BUF_LEN.min(buf.len())]);
+            let len = chunkbuf.len().min(buf.len());
+            let chunk = &mut chunkbuf[0..len];
+            buf.read(chunk)?;
+            linux_kernel_module::random::add_randomness(chunk);
         }
         Ok(())
     }
