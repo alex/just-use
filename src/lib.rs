@@ -5,61 +5,53 @@ use linux_kernel_module::{self, cstr};
 struct RandomFile;
 
 impl linux_kernel_module::file_operations::FileOperations for RandomFile {
-    const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
-        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>()
-            .read()
-            .write()
-            .build();
-
     fn open() -> linux_kernel_module::KernelResult<Self> {
         Ok(RandomFile)
     }
-}
 
-impl linux_kernel_module::file_operations::Read for RandomFile {
-    fn read(
-        &self,
-        file: &linux_kernel_module::file_operations::File,
-        buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
-        _offset: u64,
-    ) -> linux_kernel_module::KernelResult<()> {
-        let mut chunkbuf = [0; 256];
-        while !buf.is_empty() {
-            let len = chunkbuf.len().min(buf.len());
-            let chunk = &mut chunkbuf[0..len];
-            if file
-                .flags()
-                .contains(linux_kernel_module::file_operations::FileFlags::NONBLOCK)
-            {
-                linux_kernel_module::random::getrandom_nonblock(chunk)?;
-            } else {
-                linux_kernel_module::random::getrandom(chunk)?;
+    const READ: linux_kernel_module::file_operations::ReadFn<Self> = Some(
+        |_this: &Self,
+         file: &linux_kernel_module::file_operations::File,
+         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
+         _offset: u64|
+         -> linux_kernel_module::KernelResult<()> {
+            let mut chunkbuf = [0; 256];
+            while !buf.is_empty() {
+                let len = chunkbuf.len().min(buf.len());
+                let chunk = &mut chunkbuf[0..len];
+                if file
+                    .flags()
+                    .contains(linux_kernel_module::file_operations::FileFlags::NONBLOCK)
+                {
+                    linux_kernel_module::random::getrandom_nonblock(chunk)?;
+                } else {
+                    linux_kernel_module::random::getrandom(chunk)?;
+                }
+                buf.write(chunk)?;
             }
-            buf.write(chunk)?;
-        }
-        Ok(())
-    }
-}
+            Ok(())
+        },
+    );
 
-impl linux_kernel_module::file_operations::Write for RandomFile {
-    fn write(
-        &self,
-        buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
-        _offset: u64,
-    ) -> linux_kernel_module::KernelResult<()> {
-        let mut chunkbuf = [0; 256];
-        while !buf.is_empty() {
-            let len = chunkbuf.len().min(buf.len());
-            let chunk = &mut chunkbuf[0..len];
-            buf.read(chunk)?;
-            linux_kernel_module::random::add_randomness(chunk);
-        }
-        Ok(())
-    }
-}
+    const WRITE: linux_kernel_module::file_operations::WriteFn<Self> = Some(
+        |_this: &Self,
+         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
+         _offset: u64|
+         -> linux_kernel_module::KernelResult<()> {
+            let mut chunkbuf = [0; 256];
+            while !buf.is_empty() {
+                let len = chunkbuf.len().min(buf.len());
+                let chunk = &mut chunkbuf[0..len];
+                buf.read(chunk)?;
+                linux_kernel_module::random::add_randomness(chunk);
+            }
+            Ok(())
+        },
+    );
 
-// TODO:
-// - impl Poll (check if Read will be non-blocking)
+    // TODO:
+    // - const POLL (check if Read will be non-blocking)
+}
 
 struct JustUseModule {
     _chrdev_registration: linux_kernel_module::chrdev::Registration,
